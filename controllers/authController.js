@@ -31,6 +31,7 @@ const authController = {
     // LOGIN
     loginUser: async (req, res) => {
         try {
+           
             const user = await User.findOne({ username: req.body.username });
             if (!user) return res.status(404).json({ message: "Wrong username" });
 

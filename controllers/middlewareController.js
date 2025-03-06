@@ -3,6 +3,7 @@ const middlewareController = {
     //verify token
     verifyToken: (req, res, next) => {
         const authHeader = req.headers.authorization;
+
         if (authHeader) {
             const accessToken = authHeader.split(" ")[1];
             // eslint-disable-next-line no-undef
@@ -11,6 +12,7 @@ const middlewareController = {
                     return res.status(403).json("Token is not valid");
                 }
                 req.user = user;
+                // console.log(user);
                 next();
             });
         } else {

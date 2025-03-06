@@ -9,6 +9,7 @@ import authRoute from "./routes/auth.js";
 import userRoute from "./routes/user.js"
 import productRoute from './routes/product.js'
 import categoriesRoute from './routes/categories.js'
+import cartRoute from "./routes/cart.js"
 const port = 5000;
 const app = express();
 dotenv.config();
@@ -31,6 +32,8 @@ app.use("/v1/auth", authRoute)
 app.use("/v1/user", userRoute)
 app.use("/v1/product",productRoute)
 app.use("/v1/category",categoriesRoute)
+app.use("/v1/cart",cartRoute)
+
 
 app.listen(port, () => {
     console.log(`Server is running port:${port}`);
