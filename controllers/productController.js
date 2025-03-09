@@ -63,11 +63,14 @@ const productController = {
   getRelatedProduct: async (req, res) => {
     try {
       const productId = req.params.id;
-      const product = await Product.findById(productId);
+      const product = await Product.findById(productId).lean();
+      if(!product){
+        return res.status(404).json({message: "Product not found"});
+      }
       const relateddProduct = await Product.find({
         _id: { $ne: productId },
         $or: [{ category: product.category }, { tags: { $in: product.tags } }],
-      });
+      }).lean();
       return res.status(200).json(relateddProduct);
     } catch (error) {
       return res.status(500).json(error);
