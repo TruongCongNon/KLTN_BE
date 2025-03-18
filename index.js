@@ -10,10 +10,10 @@ import userRoute from "./routes/user.js"
 import productRoute from './routes/product.js'
 import categoriesRoute from './routes/categories.js'
 import cartRoute from "./routes/cart.js"
+import uploadRoute  from "./routes/upload.js"
 const port = 5000;
 const app = express();
 dotenv.config();
-
 const connectToMongo = async () => {
     try {
         await mongoose.connect(process.env.MONGODB_URL);
@@ -33,6 +33,8 @@ app.use("/v1/user", userRoute)
 app.use("/v1/product",productRoute)
 app.use("/v1/category",categoriesRoute)
 app.use("/v1/cart",cartRoute)
+app.use("/v1/image",uploadRoute )
+app.use("/assets", express.static("assets"));
 
 
 app.listen(port, () => {

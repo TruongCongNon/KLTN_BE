@@ -1,6 +1,6 @@
 import { Router } from "express";
 import user from "../controllers/userController.js";
-import middlewareController from "../controllers/middlewareController.js";
+import middlewareController from "../middleware/middlewareController.js";
 
 const router = Router();
 router.get("/", middlewareController.verifyToken, user.getAllUsers);

@@ -21,14 +21,28 @@ const productController = {
       return res.status(500).json({ message: error.message });
     }
   },
- getAllProduct : async (req, res) => {
+  getAllProduct: async (req, res) => {
     try {
-      let query = {};
-      if (req.query.category && req.query.category !== "") {
-        query.category = req.query.category;
-      }
-      const products = await Product.find(query);
-      return res.status(200).json(products);
+      const page = parseInt(req.query.page) || 1; // Trang hiện tại, mặc định là 1
+      const limit = parseInt(req.query.limit) || 10; // Số sản phẩm mỗi trang, mặc định là 10
+      const skip = (page - 1) * limit; // Số sản phẩm bỏ qua
+  
+      // Lấy tổng số sản phẩm để tính tổng số trang
+      const totalProducts = await Product.countDocuments();
+      const totalPages = Math.ceil(totalProducts / limit);
+  
+      // Lấy sản phẩm theo trang
+      const products = await Product.find()
+        .skip(skip)
+        .limit(limit);
+  
+      return res.status(200).json({
+        data: products,
+        page,
+        limit,
+        totalProducts,
+        totalPages,
+      });
     } catch (error) {
       return res.status(500).json({ message: "Error fetching products", error });
     }

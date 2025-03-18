@@ -1,12 +1,22 @@
 import Cart from "../models/cart.js";
 import mongoose from "mongoose";
 const cartController = {
+  getCart: async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const cart = await Cart.findOne({ userId });
+      if (!cart) return res.status(404).json({ message: "Không tìm thấy giỏ hàng" });
+      res.status(200).json(cart);
+    } catch (error) {
+      res.status(500).json({ error: "Lỗi server", details: error.message });
+    }
+  },
+
   addToCart: async (req, res) => {
     try {
       const userId = req.user._id || req.user.id;
       const { productId, name, price, quantity, image } = req.body.product;
       let cart = await Cart.findOne({ userId });
-      console.log(cart);
       if (!cart) {
         cart = new Cart({
           userId,
@@ -25,13 +35,12 @@ const cartController = {
       await cart.save();
       res.json({ success: true, cart });
     } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
+      // console.error("Lỗi khi thêm vào giỏ hàng:", error);
       res.status(500).json({ error: "Lỗi server" });
     }
   },
   removeFromCart: async (req, res) => {
     const { userId, productId } = req.body;
-console.log("back end nhanajd dược "+ productId);
     try {
       if (
         !mongoose.Types.ObjectId.isValid(userId) ||
@@ -57,22 +66,16 @@ console.log("back end nhanajd dược "+ productId);
           .json({ error: "Sản phẩm không tồn tại trong giỏ hàng" });
       }
 
-      // Xóa sản phẩm khỏi mảng
       cart.items.splice(itemIndex, 1);
-
-      // Cập nhật lại tổng số lượng và tổng giá tiền
       cart.totalQuantity =
         cart.items.length > 0
           ? cart.items.reduce((sum, item) => sum + (item.quantity || 0), 0)
           : 0;
-
       cart.totalPrice =
         cart.items.length > 0
           ? cart.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0)
           : 0;
-
       await cart.save();
-
       res.json({ message: "Xóa sản phẩm thành công", cart });
     } catch (error) {
       res
@@ -83,14 +86,15 @@ console.log("back end nhanajd dược "+ productId);
 
   clearCart: async (req, res) => {
     const { userId } = req.body;
+    // console.log("=>" + userId);
     try {
-      await Cart.findOneAndUpdate(
+      const cartDeleted = await Cart.findOneAndUpdate(
         { userId },
         { $set: { items: [], totalQuantity: 0, totalPrice: 0 } },
         { new: true }
       );
 
-      res.status(200).json({ message: "gio hang xoa thanh cong" });
+      res.status(200).json(cartDeleted);
     } catch (error) {
       res.status(500).json({ error: "loi xoa gio hang" });
     }
