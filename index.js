@@ -11,6 +11,7 @@ import productRoute from './routes/product.js'
 import categoriesRoute from './routes/categories.js'
 import cartRoute from "./routes/cart.js"
 import uploadRoute  from "./routes/upload.js"
+import inventoryRoute from "./routes/inventory.js"
 const port = 5000;
 const app = express();
 dotenv.config();
@@ -34,6 +35,8 @@ app.use("/v1/product",productRoute)
 app.use("/v1/category",categoriesRoute)
 app.use("/v1/cart",cartRoute)
 app.use("/v1/image",uploadRoute )
+app.use("/v1/inventory",inventoryRoute )
+
 app.use("/assets", express.static("assets"));
 
 
