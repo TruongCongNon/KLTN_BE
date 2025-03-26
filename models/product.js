@@ -3,11 +3,12 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     price: { type: Number, required: true },
-    description: { type: String },
+    color: { type: String, required: true },
     category: { type: String },
     image: { type: String },
     rating: { type: Number },
-    tags:{type:[String], default:[]}
+    tags: { type: [String], default: [] },
+    description: { type: String },
   },
   { timestamps: true }
 );

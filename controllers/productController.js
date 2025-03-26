@@ -1,23 +1,44 @@
-import { query } from "express";
-import Product from "../models/product.js";
 import Inventory from "../models/inventory.js";
+import Product from "../models/product.js";
 import mongoose from "mongoose";
 
 const productController = {
   createProduct: async (req, res) => {
     try {
+      
+      console.log("req.body return=>", JSON.stringify(req.body, null, 2));
+      console.log("🔥 req.files:", req.files); 
+      const existingProduct = await Product.findOne({ name: req.body.name });
+      console.log("existingProduct:    " + existingProduct);
+      if (existingProduct) {
+        let inventory = await Inventory.findOne({
+          productId: existingProduct._id,
+        });
+        if (inventory) {
+          inventory.stock += parseInt(req.body.stock);
+          await inventory.save();
+        } else {
+          await Inventory.create({
+            productId: existingProduct._id.toString(),
+            stock: req.body.stock || 0,
+            sold: 0,
+          });
+        }
+        return res.status(200).json(existingProduct);
+      }
       const newProduct = new Product({
         name: req.body.name,
         price: req.body.price,
         description: req.body.description,
+        color:req.body.color||'red',
         category: req.body.category,
-        image: req.body.image,
+        images: req.file ? `/assets/${req.file.filename}` : null,
         rating: req.body.rating,
         tags: req.body.tags,
       });
       const product = await newProduct.save();
       await Inventory.create({
-        productId: product._id,
+        productId: product._id.toString(),
         stock: req.body.stock || 0,
         sold: 0,
       });
@@ -27,33 +48,17 @@ const productController = {
       return res.status(500).json({ message: error.message });
     }
   },
+
   getAllProduct: async (req, res) => {
     try {
-      const page = parseInt(req.query.page) || 1; // Trang hiện tại, mặc định là 1
-      const limit = parseInt(req.query.limit) || 10; // Số sản phẩm mỗi trang, mặc định là 10
-      const skip = (page - 1) * limit; // Số sản phẩm bỏ qua
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
 
-      // Lấy tổng số sản phẩm để tính tổng số trang
       const totalProducts = await Product.countDocuments();
       const totalPages = Math.ceil(totalProducts / limit);
 
-      // Lấy sản phẩm theo trang
-      const products = await Product.aggregate([
-        {
-          $lookup: {
-            // su dung loookup de lay data tu inventiry
-            from: "inventories", // ten collection cua inventory
-            localField: "_id",
-            foreignField: "productId",
-            as: "inventory",
-          },
-        },
-        {
-          $unwind: { path: "$inventory", preserveNullAndEmptyArrays: true },
-        },
-        { $skip: skip },
-        { $limit: limit },
-      ]);
+      const products = await Product.find().skip(skip).limit(limit);
 
       return res.status(200).json({
         data: products,
@@ -68,46 +73,36 @@ const productController = {
         .json({ message: "Error fetching products", error });
     }
   },
+
   getOneByIdProduct: async (req, res) => {
     try {
-      const productId = req.params.id;
-      const product = await Product.aggregate([
-        { $match: { _id: new mongoose.Types.ObjectId(productId) } },
-        {
-          $lookup: {
-            from: "inventories",
-            localField: "_id",
-            foreignField: "productId",
-            as: "inventory",
-          },
-        },
-        { $unwind: { path: "$inventory", preserveNullAndEmptyArrays: true } },
-      ]);
+      const product = await Product.findById(req.params.id);
       return res.status(200).json(product);
     } catch (error) {
       return res.status(500).json(error);
     }
   },
+
   deleteProduct: async (req, res) => {
     try {
-      const product = await Product.findById(req.params.id);
+      await Product.findByIdAndDelete(req.params.id);
       return res.status(200).json("Deleted Success");
     } catch (error) {
       return res.status(500).json(error);
     }
   },
+
   updateProduct: async (req, res) => {
     try {
-      const { stock, ...updateProduct } = req.body;
       const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
       });
-
       return res.status(200).json(product);
     } catch (error) {
       return res.status(500).json(error);
     }
   },
+
   getRelatedProduct: async (req, res) => {
     try {
       const productId = req.params.id;
@@ -125,4 +120,5 @@ const productController = {
     }
   },
 };
+
 export default productController;
