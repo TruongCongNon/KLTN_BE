@@ -5,9 +5,8 @@ import mongoose from "mongoose";
 const productController = {
   createProduct: async (req, res) => {
     try {
-      
-      console.log("req.body return=>", JSON.stringify(req.body, null, 2));
-      console.log("🔥 req.files:", req.files); 
+      // console.log("req.body return=>", JSON.stringify(req.body, null, 2));
+      // console.log(" req.files:", req.files);
       const existingProduct = await Product.findOne({ name: req.body.name });
       console.log("existingProduct:    " + existingProduct);
       if (existingProduct) {
@@ -30,12 +29,13 @@ const productController = {
         name: req.body.name,
         price: req.body.price,
         description: req.body.description,
-        color:req.body.color||'red',
+        color: req.body.color || "red",
         category: req.body.category,
         images: req.file ? `/assets/${req.file.filename}` : null,
         rating: req.body.rating,
         tags: req.body.tags,
       });
+      console.log("🔥 Dữ liệu sẽ lưu vào MongoDB:", newProduct);
       const product = await newProduct.save();
       await Inventory.create({
         productId: product._id.toString(),
@@ -94,9 +94,16 @@ const productController = {
 
   updateProduct: async (req, res) => {
     try {
-      const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      const id = req.params.id;
+      const updateData = { ...req.body };
+      if (req.file) {
+        updateData.images = `/assets/${req.file.filename}`;
+      }
+      const product = await Product.findByIdAndUpdate(id, updateData, {
         new: true,
+        runValidators: true,
       });
+      console.log("product nhan duoc =>    "+ product);
       return res.status(200).json(product);
     } catch (error) {
       return res.status(500).json(error);

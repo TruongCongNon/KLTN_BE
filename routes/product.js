@@ -9,6 +9,6 @@ router.post("/",upload.single("images"), middlewareController.verifyTokenAndAdmi
 router.get("/", middlewareController.verifyTokenAndAdminAuth, productController.getAllProduct);
 router.get("/:id",middlewareController.verifyToken, productController.getOneByIdProduct);
 router.delete("/:id",middlewareController.verifyTokenAndAdminAuth, productController.deleteProduct);
-router.put("/update/:id",middlewareController.verifyTokenAndAdminAuth, productController.updateProduct);
+router.put("/update/:id",upload.single('images'),middlewareController.verifyTokenAndAdminAuth, productController.updateProduct);
 router.get("/related/:id",middlewareController.verifyTokenAndAdminAuth, productController.getRelatedProduct);
 export default router;
