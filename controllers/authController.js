@@ -60,14 +60,13 @@ const authController = {
   // REQUEST REFRESH TOKEN
   requestRefreshToken: async (req, res) => {
     const { refreshToken } = req.body;
-   // Debug
-
+    // Debug
+    // console.log("refreshToken => ", refreshToken);
     if (!refreshToken) {
       return res.status(401).json("You are not authenticated");
     }
 
     if (!refreshTokens.includes(refreshToken)) {
-      console.log("Stored refreshTokens:", refreshTokens); // Debug
       return res.status(403).json("Refresh token is not valid");
     }
 

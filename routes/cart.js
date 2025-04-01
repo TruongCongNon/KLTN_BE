@@ -8,5 +8,4 @@ router.post("/add", middlewareController.verifyToken, cartController.addToCart);
 router.post("/remove", middlewareController.verifyToken, cartController.removeFromCart);
 router.post("/clear", middlewareController.verifyToken, cartController.clearCart);
 
-
 export default router;

@@ -35,7 +35,7 @@ const productController = {
         rating: req.body.rating,
         tags: req.body.tags,
       });
-      console.log("🔥 Dữ liệu sẽ lưu vào MongoDB:", newProduct);
+      console.log(" Dữ liệu sẽ lưu vào MongoDB:", newProduct);
       const product = await newProduct.save();
       await Inventory.create({
         productId: product._id.toString(),
@@ -73,7 +73,15 @@ const productController = {
         .json({ message: "Error fetching products", error });
     }
   },
-
+  getAllProductCategory: async (req, res) => {
+    try {
+      const products = await Product.find();
+      return res.status(200).json(products);
+    } catch (error) {
+      console.log("Lỗi khi lấy sản phẩm:", error);
+      return res.status(500).json({ message: "Lỗi server", error: error.message });
+    }
+  },
   getOneByIdProduct: async (req, res) => {
     try {
       const product = await Product.findById(req.params.id);
@@ -103,7 +111,7 @@ const productController = {
         new: true,
         runValidators: true,
       });
-      console.log("product nhan duoc =>    "+ product);
+      console.log("product nhan duoc =>    " + product);
       return res.status(200).json(product);
     } catch (error) {
       return res.status(500).json(error);
