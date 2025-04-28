@@ -48,7 +48,10 @@ const cartController = {
         return res.status(404).json({ message: "Giỏ hàng không tồn tại" });
       }
   
-      return res.status(200).json(cart);
+      // Xóa sản phẩm khỏi giỏ hàng
+      cart.items = cart.items.filter(item => item.productId.toString() !== productId);
+      await cart.save();
+  
     } catch (error) {
       return res.status(500).json({ message: "Lỗi khi xóa sản phẩm", error });
     }

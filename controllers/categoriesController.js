@@ -5,7 +5,7 @@ const categoryController = {
     try {
       const newCategory = new Category({
         name: req.body.name,
-        image: req.body.image
+        images: req.file ? `/assets/${req.file.filename}` : null,
       });
       const category = await newCategory.save();
       return res.status(200).json(category);
@@ -21,13 +21,26 @@ const categoryController = {
       return res.status(500).json(error);
     }
   },
+  getcategoryById : async (req, res) => {
+    try {
+      const category = await Category.findById(req.params.id);
+      return res.status(200).json(category);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  },
   updatecategory: async (req, res) => {
     try {
-      const category = await Category.findByIdAndUpdate(
-        req.params.id,
-        req.body,
-        { new: true }
-      );
+      const id = req.params.id;
+      const updateData = { ...req.body };
+      if (req.file) {
+        updateData.images = `/assets/${req.file.filename}`;
+      }
+      const category= await Category.findByIdAndUpdate(id, updateData, {
+        new: true,
+        runValidators: true,
+      });
+      console.log("category nhan duoc =>    " + category);
       return res.status(200).json(category);
     } catch (error) {
       return res.status(500).json(error);
@@ -35,7 +48,7 @@ const categoryController = {
   },
   deletecategory: async (req,res) => {
     try {
-      const category = await Category.findById(req.params.id);
+      const category = await Category.findByIdAndDelete(req.params.id);
       return res.status(200).json("Deleted Success");
     } catch (error) {
       return res.status(500).json(error);

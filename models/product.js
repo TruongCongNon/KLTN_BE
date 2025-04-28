@@ -1,17 +1,24 @@
 import mongoose from "mongoose";
-const productSchema = new mongoose.Schema(
+import commentSchema from "./comment.js"; 
+
+const { Schema } = mongoose;
+
+const productSchema = new Schema(
   {
     name: { type: String, required: true },
-    price: { type: Number, required: true },
-    color: { type: String, required: true },
-    category: { type: String },
-    images: { type: String },
-    rating: { type: Number },
-    tags: { type: [String], default: [] },
     description: { type: String },
+    price: { type: Number, required: true },
+    tags: { type: [String], default: [] },
+    color: { type: String, required: true },
+    images: { type: [String], default: [] },
+    category:{ type: String },
+    comments: { type: [commentSchema], default: [] }, 
+    series: { type: String },
+    stock: { type: Number, default: 0 },
+    sold: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-const Product = mongoose.model("Product", productSchema);
+const Product = mongoose.models.Product || mongoose.model("Product", productSchema);
 export default Product;

@@ -5,47 +5,39 @@ import mongoose from "mongoose";
 const productController = {
   createProduct: async (req, res) => {
     try {
-      // console.log("req.body return=>", JSON.stringify(req.body, null, 2));
-      // console.log(" req.files:", req.files);
-      const existingProduct = await Product.findOne({ name: req.body.name });
-      console.log("existingProduct:    " + existingProduct);
-      if (existingProduct) {
-        let inventory = await Inventory.findOne({
-          productId: existingProduct._id,
-        });
-        if (inventory) {
-          inventory.stock += parseInt(req.body.stock);
-          await inventory.save();
-        } else {
-          await Inventory.create({
-            productId: existingProduct._id.toString(),
-            stock: req.body.stock || 0,
-            sold: 0,
-          });
-        }
-        return res.status(200).json(existingProduct);
-      }
+      const { name, description, price, tags, color, series, category } =
+        req.body;
+      const images = req.files || [];
+
+      const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
+
+      const imagePaths = images.map((file) => `/assets/${file.filename}`);
+
       const newProduct = new Product({
-        name: req.body.name,
-        price: req.body.price,
-        description: req.body.description,
-        color: req.body.color || "red",
-        category: req.body.category,
-        images: req.file ? `/assets/${req.file.filename}` : null,
-        rating: req.body.rating,
-        tags: req.body.tags,
-      });
-      console.log(" Dữ liệu sẽ lưu vào MongoDB:", newProduct);
-      const product = await newProduct.save();
-      await Inventory.create({
-        productId: product._id.toString(),
-        stock: req.body.stock || 0,
+        name,
+        description,
+        price,
+        tags: parsedTags,
+        color,
+        series,
+        category, // thêm category vào đúng model
+        images: imagePaths,
+        stock: 0,
         sold: 0,
       });
-      return res.status(200).json(product);
+
+      await newProduct.save();
+
+      return res.status(201).json({
+        message: "Sản phẩm đã được tạo thành công",
+        product: newProduct,
+      });
     } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: error.message });
+      console.error("Lỗi khi tạo sản phẩm:", error);
+      return res.status(500).json({
+        message: "Có lỗi xảy ra khi tạo sản phẩm",
+        error: error.message,
+      });
     }
   },
 
@@ -58,10 +50,24 @@ const productController = {
       const totalProducts = await Product.countDocuments();
       const totalPages = Math.ceil(totalProducts / limit);
 
-      const products = await Product.find().skip(skip).limit(limit);
-
+      const products = await Product.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+      const inventories = await Inventory.find().populate("productId").lean();
+      const productWithInventory = products.map((product) => {
+        const inv = inventories.find(
+          (i) => i.productId?._id?.toString() === product._id.toString()
+        );
+        return {
+          ...product,
+          stock: inv ? inv.stock : 0,
+          sold: inv ? inv.sold : 0,
+        };
+      });
       return res.status(200).json({
-        data: products,
+        data: productWithInventory,
         page,
         limit,
         totalProducts,
@@ -79,13 +85,22 @@ const productController = {
       return res.status(200).json(products);
     } catch (error) {
       console.log("Lỗi khi lấy sản phẩm:", error);
-      return res.status(500).json({ message: "Lỗi server", error: error.message });
+      return res
+        .status(500)
+        .json({ message: "Lỗi server", error: error.message });
     }
   },
   getOneByIdProduct: async (req, res) => {
     try {
-      const product = await Product.findById(req.params.id);
-      return res.status(200).json(product);
+      const product = await Product.findById(req.params.id).lean();
+      const inventory = await Inventory.findOne({
+        productId: req.params.id,
+      }).lean();
+      return res.status(200).json({
+        ...product,
+        stock: inventory?.stock || 0,
+        sold: inventory?.sold || 0,
+      });
     } catch (error) {
       return res.status(500).json(error);
     }
@@ -103,21 +118,39 @@ const productController = {
   updateProduct: async (req, res) => {
     try {
       const id = req.params.id;
-      const updateData = { ...req.body };
-      if (req.file) {
-        updateData.images = `/assets/${req.file.filename}`;
+      const { name, description, price, tags, color, series, category } =
+        req.body;
+      const images = req.files || [];
+
+      const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
+
+      const imagePaths = images.map((file) => `/assets/${file.filename}`);
+
+      const updateData = {
+        name,
+        description,
+        price,
+        tags: parsedTags,
+        color,
+        series,
+        category,
+      };
+
+      if (images.length > 0) {
+        updateData.images = imagePaths;
       }
-      const product = await Product.findByIdAndUpdate(id, updateData, {
+
+      const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
         new: true,
         runValidators: true,
       });
-      console.log("product nhan duoc =>    " + product);
-      return res.status(200).json(product);
+
+      return res.status(200).json(updatedProduct);
     } catch (error) {
-      return res.status(500).json(error);
+      console.error("Lỗi khi cập nhật sản phẩm:", error);
+      return res.status(500).json({ message: error.message });
     }
   },
-
   getRelatedProduct: async (req, res) => {
     try {
       const productId = req.params.id;
@@ -132,6 +165,47 @@ const productController = {
       return res.status(200).json(relateddProduct);
     } catch (error) {
       return res.status(500).json(error);
+    }
+  },
+  getProductBycategoryName: async (req, res) => {
+    try {
+      const name = req.params.name;
+      const products = await Product.find({ category: name });
+
+      return res.status(200).json(products);
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
+    }
+  },
+  getAllProductBySeries: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const series = req.query.series;
+      let filter = {};
+
+      if (series) {
+        filter.series = series;
+      }
+
+      const totalProducts = await Product.countDocuments(filter);
+      const totalPages = Math.ceil(totalProducts / limit);
+
+      const products = await Product.find(filter).skip(skip).limit(limit);
+
+      return res.status(200).json({
+        data: products,
+        page,
+        limit,
+        totalProducts,
+        totalPages,
+      });
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ message: "Error fetching products", error });
     }
   },
 };

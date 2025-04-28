@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../services/authService.js";
-
+} from "../services/authService.service.js";
+import nodemailer from "nodemailer";
 let refreshTokens = [];
 
 const authController = {
@@ -20,6 +20,7 @@ const authController = {
         username: req.body.username,
         email: req.body.email,
         password: hashed,
+        role: req.body.role || "user",
       });
 
       // Save to DB
@@ -60,14 +61,8 @@ const authController = {
   // REQUEST REFRESH TOKEN
   requestRefreshToken: async (req, res) => {
     const { refreshToken } = req.body;
-    // Debug
-    // console.log("refreshToken => ", refreshToken);
     if (!refreshToken) {
       return res.status(401).json("You are not authenticated");
-    }
-
-    if (!refreshTokens.includes(refreshToken)) {
-      return res.status(403).json("Refresh token is not valid");
     }
 
     jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY, (err, user) => {
@@ -80,7 +75,6 @@ const authController = {
       const newAccessToken = generateAccessToken(user);
       const newRefreshToken = generateRefreshToken(user);
       refreshTokens.push(newRefreshToken);
-
       res
         .status(200)
         .json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
@@ -98,6 +92,80 @@ const authController = {
       (token) => token !== req.cookies.refreshToken
     );
     res.status(200).json("Logout successfully");
+  },
+  senOTP: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await User.findOne({ email });
+      if (!user)
+        return res.status(404).json({ message: "Email không tồn tại!" });
+      const now = Date.now();
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.resetOTP = otp;
+      user.otpExpires = now + 2 * 60 * 1000;
+      user.isVerifiedReset = false;
+      await user.save();
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "nontruong51@gmail.com",
+          pass: "xnjjyvlxzlazrint",
+        },
+      });
+      const expiresAt = new Date(user.otpExpires).toLocaleTimeString("vi-VN");
+
+      await transporter.sendMail({
+        from: "SmartNova",
+        to: email,
+        subject: "Mã OTP khôi phục mật khẩu",
+        text: `Mã xác thực OTP của bạn là: ${otp}. Mã có hiệu lực đến ${expiresAt}`,
+      });
+
+      console.log(`gui  otp den${email} `, otp);
+      res.status(200).json({
+        message: "gui ma thanh cong",
+      });
+    } catch (error) {
+      res.status(500).json("loi server" + error);
+    }
+  },
+  verifyOTP: async (req, res) => {
+    try {
+      const { email, otp } = req.body;
+      const user = await User.findOne({ email });
+
+      if (user.resetOTP !== otp || user.otpExpires < Date.now()) {
+        return res.status(400).json({ message: "ma khong hop le" });
+      }
+      user.otpExpires = null;
+      user.isVerifiedReset = true;
+      user.resetOTP = null;
+      await user.save();
+
+      return res.status(200).json({ message: "xac thuc thanh cong" });
+    } catch (error) {
+      return res.status(500).json({ message: "ma khong hop le" + error });
+    }
+  },
+  resetPassword: async (req, res) => {
+    try {
+      const { email, newPassword, confirmPassword } = req.body;
+      const user = await User.findOne({ email });
+      if (!user || !user.isVerifiedReset)
+        return res.status(403).json({ message: " chua xac minh otp" });
+      if (newPassword !== confirmPassword) {
+        return res
+          .status(400)
+          .json({ message: "mat khau nhap  lai kh  khop!" });
+      }
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      user.password = hashedPassword;
+      user.isVerifiedReset = false;
+      await user.save();
+      return res.status(200).json({ message: "thay doi mat khau thanh cong" });
+    } catch (error) {
+      return res.status(500).json("loi roi" + error);
+    }
   },
 };
 
