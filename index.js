@@ -14,7 +14,8 @@ import uploadRoute from "./routes/upload.js";
 import inventoryRoute from "./routes/inventory.js";
 import  orderRoute from"./routes/order.js";
 import flashSaleRoute from"./routes/flashSale.js"
-import paymentRoute from "./routes/payment.js";
+import commentRoute from "./routes/comment.js"
+
 const port = 5000;
 const app = express();
 dotenv.config();
@@ -41,7 +42,7 @@ app.use("/v1/image", uploadRoute);
 app.use("/v1/inventory", inventoryRoute);
 app.use("/v1/order", orderRoute);
 app.use("/v1/flashSale", flashSaleRoute)
-app.use("/v1/payment", paymentRoute);
+app.use("/v1/comments", commentRoute)
 app.use("/assets", express.static("assets"));
 
 app.listen(port, () => {

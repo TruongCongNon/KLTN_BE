@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
-import commentSchema from "./comment.js"; 
 
-const { Schema } = mongoose;
 
-const productSchema = new Schema(
+
+
+const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     description: { type: String },
@@ -12,7 +12,7 @@ const productSchema = new Schema(
     color: { type: String, required: true },
     images: { type: [String], default: [] },
     category:{ type: String },
-    comments: { type: [commentSchema], default: [] }, 
+    comments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
     series: { type: String },
     stock: { type: Number, default: 0 },
     sold: { type: Number, default: 0 },

@@ -1,14 +1,14 @@
-import mongoose from "mongoose";
-const { Schema } = mongoose;
+import mongoose from 'mongoose';
 
-const commentSchema = new Schema(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    username: { type: String, required: true },
-    text: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-  },
-  { _id: false } // comment là subdocument, không cần _id riêng
-);
+const commentSchema = new mongoose.Schema({
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  username: { type: String, required: true },
+  content: { type: String, required: true },
+  images: { type: [String], default: [] }, 
+  parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: null },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date }
+});
 
-export default commentSchema;
+export default mongoose.model('Comment', commentSchema)
