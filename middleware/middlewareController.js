@@ -18,27 +18,20 @@ const middlewareController = {
     }
   },
 
-  // Kiểm tra quyền admin
-  verifyTokenAndAdminAuth: (req, res, next) => {
-    middlewareController.verifyToken(req, res, () => {
-      if (req.user.role === "admin") {
-        next(); // Nếu là admin, cho phép tiếp tục
-      } else {
-        return res.status(403).json("Bạn không có quyền xóa sản phẩm khác");
-      }
-    });
-  },
-
-  // Kiểm tra quyền shipper
-  verifyTokenAndShipperAuth: (req, res, next) => {
-    middlewareController.verifyToken(req, res, () => {
-      if (req.user.role === "shipper") {
-        next(); // Nếu là shipper, cho phép tiếp tục
-      } else {
-        return res.status(403).json("Bạn không có quyền làm việc với đơn hàng");
-      }
-    });
-  },
+  // Kiểm tra quyền admin, shipper, warehouse 
+  verifyTokenAndRole: (...allowedRoles)=>{
+    return (req,res,next)=>{
+      middlewareController.verifyToken(req,res,()=>{
+        if(allowedRoles.includes(req.user.role)){
+          next();
+        }else{
+          res.status(403).json("Bạn không có quyền truy cập");
+        }
+      
+      })
+    }
+  }
+  
 
 };
 

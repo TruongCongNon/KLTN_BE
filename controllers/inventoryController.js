@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import Inventory from "../models/inventory.js";
 import XLSX from "xlsx";
 import Product from "../models/product.js";
+import Order from "../models/orders.js";
+import PDFDocument from "pdfkit";
 const inventoryController = {
   getInventoryByProductId: async (req, res) => {
     try {
@@ -87,7 +89,7 @@ const inventoryController = {
   getStockHistory: async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const limit = parseInt(req.query.limit) || 10;  
       const skip = (page - 1) * limit;
 
       const inventories = await Inventory.find()
@@ -173,6 +175,7 @@ const inventoryController = {
       });
     }
   },
+
 };
 
 export default inventoryController;

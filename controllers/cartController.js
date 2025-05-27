@@ -12,27 +12,34 @@ const cartController = {
   },
 
   addToCart: async (req, res) => {
-    const { userId, productId, quantity } = req.body;
+    const { userId, productId, quantity, priceSale } = req.body;
+  
     try {
       let cart = await Cart.findOne({ userId });
+  
       if (cart) {
         const itemIndex = cart.items.findIndex(
           (item) => item.productId.toString() === productId
         );
+  
         if (itemIndex > -1) {
           cart.items[itemIndex].quantity += quantity;
+          cart.items[itemIndex].priceSale = priceSale; // ✅ luôn cập nhật giá hiện tại (sale hoặc gốc)
         } else {
-          cart.items.push({ productId, quantity });
+          cart.items.push({ productId, quantity, priceSale });
         }
       } else {
-        cart = new Cart({ userId, items: [{ productId, quantity }] });
+        cart = new Cart({
+          userId,
+          items: [{ productId, quantity, priceSale }],
+        });
       }
+  
       await cart.save();
-      res.json(cart);
+      res.status(200).json(cart);
     } catch (err) {
-      res
-        .status(500)
-        .json({ message: "Lỗi khi thêm vào giỏ hàng", error: err });
+      console.error("Lỗi khi thêm vào giỏ hàng:", err);
+      res.status(500).json({ message: "Lỗi khi thêm vào giỏ hàng", error: err });
     }
   },
   removeFromCart: async (req, res) => {

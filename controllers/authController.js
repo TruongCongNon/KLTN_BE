@@ -6,6 +6,7 @@ import {
   generateRefreshToken,
 } from "../services/authService.service.js";
 import nodemailer from "nodemailer";
+import { getDefaultAvatar } from "../constants/user.constant.js";
 let refreshTokens = [];
 
 const authController = {
@@ -21,6 +22,9 @@ const authController = {
         email: req.body.email,
         password: hashed,
         role: req.body.role || "user",
+        images: getDefaultAvatar(req.body.username),
+        phone: null,
+        address: null,
       });
 
       // Save to DB

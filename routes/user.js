@@ -1,11 +1,14 @@
 import { Router } from "express";
-import user from "../controllers/userController.js";
-import middlewareController from "../middleware/middlewareController.js";
+import userController from "../controllers/userController.js";
 import upload from "../middleware/middlewareImage.js";
 
 const router = Router();
-router.get("/",middlewareController.verifyTokenAndAdminAuth, user.getAllUsers);
-router.get("/:id" ,middlewareController.verifyTokenAndAdminAuth, user.getUserById)
-router.put("/update/:id",upload.single('images'), middlewareController.verifyTokenAndAdminAuth, user.updateUser);
-router.delete("/:id", middlewareController.verifyTokenAndAdminAuth, user.deleteUser);
+router.get("/", userController.getAllUsers);
+router.get("/:id", userController.getUserById);
+router.post("/",upload.single("images"), userController.createUser);
+router.put("/update/:id",upload.single("images") ,userController.updateUser);
+router.delete("/:id", userController.deleteUser);
+router.put("/block/:id", userController.blockUser);
+router.put("/unblock/:id", userController.unblockUser);
+
 export default router;

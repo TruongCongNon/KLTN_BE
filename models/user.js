@@ -18,18 +18,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    phone: {
+      type: String,
+    },
+    address: {
+      type: String,
+    },
+    images: {
+      type: String, // link ảnh đại diện
+    },
     role: {
       type: String,
-      enum: ["user", "admin", "shipper"],
+      enum: ["user", "admin", "shipper" , "warehouse"],
       default: "user",
     },
     status: {
       type: String,
-      default: "active",
+      default: "active", // hoặc suspended, deactivated, ...
     },
-    images: {
-      type: String,
-      
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
     resetOTP: {
       type: String,
@@ -40,6 +49,16 @@ const userSchema = new mongoose.Schema(
     isVerifiedReset: {
       type: Boolean,
       default: false,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerifyToken: {
+      type: String,
+    },
+    emailVerifyExpires: {
+      type: Date,
     },
   },
   { timestamps: true }

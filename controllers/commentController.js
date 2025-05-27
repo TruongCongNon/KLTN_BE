@@ -1,32 +1,56 @@
 import Comment from "../models/Comment.js";
 
 const commentController = {
-    createComment: async (req, res) => {
-        try {
-          const { productId, userId, username, content, parentId } = req.body;
-      
-          const imageUrls = req.files?.map((file) => `/assets/${file.filename}`) || [];
-      
-          if (!content && imageUrls.length === 0) {
-            return res.status(400).json({ error: "Bình luận cần có nội dung hoặc ảnh." });
-          }
-      
-          const newComment = new Comment({
-            productId,
-            userId,
-            username,
-            content,
-            images: imageUrls,
-            parentId: parentId || null,
-          });
-      
-          const saved = await newComment.save();
-          res.status(201).json(saved);
-        } catch (err) {
-          res.status(400).json({ error: "Lỗi khi tạo bình luận" });
-        }
-      },
-      
+  getAllComments: async (req, res) => {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      const skip = (page - 1) * limit;
+
+      const comments = await Comment.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit));
+
+      const total = await Comment.countDocuments();
+
+      res.json({
+        comments,
+        currentPage: Number(page),
+        totalPages: Math.ceil(total / limit),
+        totalComments: total,
+      });
+    } catch (err) {
+      res.status(500).json({ error: "Lỗi khi lấy tất cả bình luận" });
+    }
+  },
+  createComment: async (req, res) => {
+    try {
+      const { productId, userId, username, content, parentId } = req.body;
+
+      const imageUrls =
+        req.files?.map((file) => `/assets/${file.filename}`) || [];
+
+      if (!content && imageUrls.length === 0) {
+        return res
+          .status(400)
+          .json({ error: "Bình luận cần có nội dung hoặc ảnh." });
+      }
+
+      const newComment = new Comment({
+        productId,
+        userId,
+        username,
+        content,
+        images: imageUrls,
+        parentId: parentId || null,
+      });
+
+      const saved = await newComment.save();
+      res.status(201).json(saved);
+    } catch (err) {
+      res.status(400).json({ error: "Lỗi khi tạo bình luận" });
+    }
+  },
 
   getCommentsByUser: async (req, res) => {
     try {

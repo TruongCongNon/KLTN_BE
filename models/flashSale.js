@@ -6,7 +6,6 @@ const flashSaleSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
       required: true,
-      unique: true,
     },
     discountPrice: {
       type: Number,
@@ -16,6 +15,7 @@ const flashSaleSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    sold: { type: Number, default: 0 },
     startTime: {
       type: Date,
       required: true,
@@ -24,12 +24,6 @@ const flashSaleSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    status: {
-      type: String,
-      enum: [ "đang diễn ra", "đã kết thúc"],
-      default: "đang diễn ra",
-    },
-  
   },
   { timestamps: true }
 );

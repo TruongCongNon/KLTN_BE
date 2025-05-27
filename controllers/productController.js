@@ -121,30 +121,24 @@ const productController = {
       const { name, description, price, tags, color, series, category } =
         req.body;
       const images = req.files || [];
-
       const parsedTags = typeof tags === "string" ? JSON.parse(tags) : tags;
-
       const imagePaths = images.map((file) => `/assets/${file.filename}`);
-
       const updateData = {
         name,
         description,
-        price,
+        price,  
         tags: parsedTags,
         color,
         series,
         category,
       };
-
       if (images.length > 0) {
         updateData.images = imagePaths;
       }
-
       const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
         new: true,
         runValidators: true,
       });
-
       return res.status(200).json(updatedProduct);
     } catch (error) {
       console.error("Lỗi khi cập nhật sản phẩm:", error);
